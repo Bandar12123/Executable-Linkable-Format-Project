@@ -85,6 +85,30 @@ printf("  Size of section headers:           %d (bytes)\n", ehdr.e_shentsize);
 printf("  Number of section headers:         %d\n", ehdr.e_shnum);
 printf("  Section header string table index: %d\n", ehdr.e_shstrndx);
 
+Elf64_Shdr *shdrs = malloc(ehdr.e_shnum * sizeof(Elf64_Shdr));
+fseek(file, ehdr.e_shoff, SEEK_SET);
+fread(shdrs, sizeof(Elf64_Shdr), ehdr.e_shnum, file);
+
+Elf64_Shdr strtab_hdr = shdrs[ehdr.e_shstrndx];
+char *shstrtab = malloc(strtab_hdr.sh_size);
+fseek(file, strtab_hdr.sh_offset, SEEK_SET);
+fread(shstrtab, 1, strtab_hdr.sh_size, file);
+
+printf("\nSection Headers:\n");
+printf("  [Nr] Name                 Type       Address          Offset       Size\n");
+for(int i = 0; i < ehdr.e_shnum; i++){
+    printf("  [%2d] %-20s 0x%-8x 0x%016lx 0x%08lx 0x%lx\n",
+        i,
+        shstrtab + shdrs[i].sh_name,
+        shdrs[i].sh_type,
+        (unsigned long)shdrs[i].sh_addr,
+        (unsigned long)shdrs[i].sh_offset,
+        (unsigned long)shdrs[i].sh_size);
+}
+
+free(shdrs);
+free(shstrtab);
+fclose(file);
 
     return 0;
 }
