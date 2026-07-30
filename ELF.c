@@ -9,4 +9,12 @@ int main(int argc, char *argv[]){
         printf("Usage: %s <elf_file>\n", argv[0]);
         return 1;
     }
+
+FILE *file = fopen(argv[1], "rb");
+if(!file){
+perror("Failed to open file");
+return 1;
+}
+
+    return 0;
 }
