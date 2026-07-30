@@ -106,6 +106,61 @@ for(int i = 0; i < ehdr.e_shnum; i++){
         (unsigned long)shdrs[i].sh_size);
 }
 
+int symtab_idx = -1;
+    for (int i = 0; i < ehdr.e_shnum; i++) {
+        if (shdrs[i].sh_type == SHT_SYMTAB) {
+            symtab_idx = i;
+            break;
+        }
+    }
+
+    if (symtab_idx != -1) {
+        Elf64_Shdr symtab_hdr = shdrs[symtab_idx];
+        Elf64_Shdr symstrtab_hdr = shdrs[symtab_hdr.sh_link];
+
+        char *symstrtab = malloc(symstrtab_hdr.sh_size);
+        fseek(file, symstrtab_hdr.sh_offset, SEEK_SET);
+        fread(symstrtab, 1, symstrtab_hdr.sh_size, file);
+
+        int num_symbols = symtab_hdr.sh_size / sizeof(Elf64_Sym);
+        Elf64_Sym *symbols = malloc(symtab_hdr.sh_size);
+        fseek(file, symtab_hdr.sh_offset, SEEK_SET);
+        fread(symbols, sizeof(Elf64_Sym), num_symbols, file);
+
+        printf("\nSymbol Table (.symtab) [%d entries]:\n", num_symbols);
+        printf("  [Num] Value            Size     Type    Bind     Name\n");
+
+        for (int i = 0; i < num_symbols; i++) {
+            char *name = symstrtab + symbols[i].st_name;
+
+            unsigned char type = ELF64_ST_TYPE(symbols[i].st_info);
+            unsigned char bind = ELF64_ST_BIND(symbols[i].st_info);
+
+            const char *type_str = "NOTYPE";
+            if (type == STT_OBJECT) type_str = "OBJECT";
+            else if (type == STT_FUNC) type_str = "FUNC";
+            else if (type == STT_SECTION) type_str = "SECTION";
+            else if (type == STT_FILE) type_str = "FILE";
+
+            const char *bind_str = "LOCAL";
+            if (bind == STB_GLOBAL) bind_str = "GLOBAL";
+            else if (bind == STB_WEAK) bind_str = "WEAK";
+
+            printf("  [%3d] 0x%016lx %-8lu %-7s %-8s %s\n",
+                i,
+                (unsigned long)symbols[i].st_value,
+                (unsigned long)symbols[i].st_size,
+                type_str,
+                bind_str,
+                strlen(name) > 0 ? name : "(no name)");
+        }
+
+        free(symbols);
+        free(symstrtab);
+    } else {
+        printf("\nSymbol table '.symtab' not found in this ELF file.\n");
+    }
+
 free(shdrs);
 free(shstrtab);
 fclose(file);
