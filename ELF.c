@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <elf.h>
+#include <elf.h> /* Uses system ELF definition structs and constants */
 
 void print_hex_dump(FILE *file, Elf64_Shdr *shdrs, char *shstrtab, int shnum, const char *target_sec) {
     int found = 0;
@@ -38,7 +38,6 @@ int main(int argc, char *argv[]){
     char *filename = NULL;
     char *dump_section = NULL;
 
-    // معالجة الخيارات والمدخلات (Arguments Parsing)
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-x") == 0 && i + 1 < argc) {
             dump_section = argv[++i];
@@ -98,7 +97,6 @@ int main(int argc, char *argv[]){
         default:      printf("Unknown (%d)\n", ehdr.e_type); break;
     }
 
-    // قراءة الأقسام (Section Headers)
     Elf64_Shdr *shdrs = malloc(ehdr.e_shnum * sizeof(Elf64_Shdr));
     fseek(file, ehdr.e_shoff, SEEK_SET);
     fread(shdrs, sizeof(Elf64_Shdr), ehdr.e_shnum, file);
