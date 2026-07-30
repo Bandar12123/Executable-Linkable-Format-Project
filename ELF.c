@@ -23,5 +23,68 @@ fclose(file);
 return 1;
 }
 
+if(memcmp(ehdr.e_ident, ELFMAG, SELFMAG) != 0){
+printf("Error: Not a valid ELF file\n");
+fclose(file);
+return 255;
+}
+
+printf("ELF Header:\n");
+printf("  Magic:   ");
+
+for(int i = 0; i < EI_NIDENT; i++){
+printf("%02x ", ehdr.e_ident[i]);
+}
+
+printf("\n");
+
+printf("  Class:                             ");
+if (ehdr.e_ident[EI_CLASS] == ELFCLASS32) printf("ELF32\n");
+else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) printf("ELF64\n");
+else printf("Invalid\n");
+
+printf("  Data:                              ");
+if (ehdr.e_ident[EI_DATA] == ELFDATA2LSB) printf("2's complement, little endian\n");
+else if (ehdr.e_ident[EI_DATA] == ELFDATA2MSB) printf("2's complement, big endian\n");
+else printf("Invalid\n");
+
+printf("  Version:                           %d (current)\n", ehdr.e_ident[EI_VERSION]);
+
+printf("  OS/ABI:                            ");
+if (ehdr.e_ident[EI_OSABI] == ELFOSABI_SYSV) printf("UNIX - System V\n");
+else if (ehdr.e_ident[EI_OSABI] == ELFOSABI_LINUX) printf("UNIX - Linux\n");
+else printf("Other (%d)\n", ehdr.e_ident[EI_OSABI]);
+
+printf("  Type:                              ");
+switch (ehdr.e_type) {
+case ET_NONE: printf("ET_NONE (Unknown)\n"); break;
+case ET_REL:  printf("ET_REL (Relocatable file)\n"); break;
+case ET_EXEC: printf("ET_EXEC (Executable file)\n"); break;
+case ET_DYN:  printf("ET_DYN (Shared object file)\n"); break;
+case ET_CORE: printf("ET_CORE (Core file)\n"); break;
+default:      printf("Unknown (%d)\n", ehdr.e_type); break;
+}
+
+printf("  Machine:                           ");
+switch (ehdr.e_machine) {
+case EM_386:    printf("Intel 80386\n"); break;
+case EM_X86_64: printf("Advanced Micro Devices X86-64\n"); break;
+case EM_ARM:    printf("ARM\n"); break;
+default:        printf("Other (0x%02x)\n", ehdr.e_machine); break;
+}
+
+printf("  Version:                           0x%x\n", ehdr.e_version);
+printf("  Entry point address:               0x%lx\n", (unsigned long)ehdr.e_entry);
+printf("  Start of program headers:          %ld (bytes into file)\n", (long)ehdr.e_phoff);
+printf("  Start of section headers:          %ld (bytes into file)\n", (long)ehdr.e_shoff);
+printf("  Flags:                             0x%x\n", ehdr.e_flags);
+printf("  Size of this header:               %d (bytes)\n", ehdr.e_ehsize);
+printf("  Size of program headers:           %d (bytes)\n", ehdr.e_phentsize);
+printf("  Number of program headers:         %d\n", ehdr.e_phnum);
+printf("  Size of section headers:           %d (bytes)\n", ehdr.e_shentsize);
+printf("  Number of section headers:         %d\n", ehdr.e_shnum);
+printf("  Section header string table index: %d\n", ehdr.e_shstrndx);
+
+
     return 0;
 }
