@@ -16,5 +16,12 @@ perror("Failed to open file");
 return 1;
 }
 
+Elf64_Ehdr ehdr;
+if (fread(&ehdr, 1, sizeof(Elf64_Ehdr), file) < sizeof(Elf64_Ehdr)){
+printf("Error: Could not read full ELF header.\n");
+fclose(file);
+return 1;
+}
+
     return 0;
 }
