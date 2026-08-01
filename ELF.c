@@ -10,7 +10,7 @@ void print_hex_dump(FILE *file, Elf64_Shdr *shdrs, char *shstrtab, int shnum, co
         if (strcmp(sec_name, target_sec) == 0) {
             found = 1;
             printf("\nHex dump of section '%s' (%ld bytes):\n", sec_name, (long)shdrs[i].sh_size);
-            
+
             if (shdrs[i].sh_size == 0) {
                 printf("  (Section is empty)\n");
                 break;
@@ -87,6 +87,13 @@ int main(int argc, char *argv[]){
     else if (ehdr.e_ident[EI_DATA] == ELFDATA2MSB) printf("2's complement, big endian\n");
     else printf("Invalid\n");
 
+    printf("  Version:                           %d (current)\n", ehdr.e_ident[EI_VERSION]);
+
+    printf("  OS/ABI:                            ");
+    if (ehdr.e_ident[EI_OSABI] == ELFOSABI_SYSV) printf("UNIX - System V\n");
+    else if (ehdr.e_ident[EI_OSABI] == ELFOSABI_LINUX) printf("UNIX - Linux\n");
+    else printf("Other (%d)\n", ehdr.e_ident[EI_OSABI]);
+
     printf("  Type:                              ");
     switch (ehdr.e_type) {
         case ET_NONE: printf("ET_NONE (Unknown)\n"); break;
@@ -96,6 +103,26 @@ int main(int argc, char *argv[]){
         case ET_CORE: printf("ET_CORE (Core file)\n"); break;
         default:      printf("Unknown (%d)\n", ehdr.e_type); break;
     }
+
+    printf("  Machine:                           ");
+    switch (ehdr.e_machine) {
+        case EM_386:    printf("Intel 80386\n"); break;
+        case EM_X86_64: printf("Advanced Micro Devices X86-64\n"); break;
+        case EM_ARM:    printf("ARM\n"); break;
+        default:        printf("Other (0x%02x)\n", ehdr.e_machine); break;
+    }
+
+    printf("  Version:                           0x%x\n", ehdr.e_version);
+    printf("  Entry point address:               0x%lx\n", (unsigned long)ehdr.e_entry);
+    printf("  Start of program headers:          %ld (bytes into file)\n", (long)ehdr.e_phoff);
+    printf("  Start of section headers:          %ld (bytes into file)\n", (long)ehdr.e_shoff);
+    printf("  Flags:                             0x%x\n", ehdr.e_flags);
+    printf("  Size of this header:               %d (bytes)\n", ehdr.e_ehsize);
+    printf("  Size of program headers:           %d (bytes)\n", ehdr.e_phentsize);
+    printf("  Number of program headers:         %d\n", ehdr.e_phnum);
+    printf("  Size of section headers:           %d (bytes)\n", ehdr.e_shentsize);
+    printf("  Number of section headers:         %d\n", ehdr.e_shnum);
+    printf("  Section header string table index: %d\n", ehdr.e_shstrndx);
 
     Elf64_Shdr *shdrs = malloc(ehdr.e_shnum * sizeof(Elf64_Shdr));
     fseek(file, ehdr.e_shoff, SEEK_SET);
